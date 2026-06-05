@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-navy: #0f224c;
+  --color-coral: #ff5a50;
+  --color-coral-hover: #e04e46;
+  --color-accentYellow: #fcc139;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: #1a1a1a;
+  background-color: #ffffff;
+}
