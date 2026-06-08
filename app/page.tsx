@@ -1,6 +1,136 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+
+// --- ANIMATED COUNTER COMPONENT ---
+function AnimatedCounter({ target, suffix = "", duration = 1500 }: { target: number; suffix?: string; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          let startTime: number | null = null;
+          const animate = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            setCount(Math.floor(progress * target));
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setCount(target);
+            }
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [target, duration, hasAnimated]);
+
+  return (
+    <span ref={ref}>
+      {count}{suffix}
+    </span>
+  );
+}
+
+// --- PROJECT LIST DATA ---
+interface Project {
+  title: string;
+  originalName: string;
+  category: string;
+  description: string;
+  link?: string;
+  image: string;
+  screenshot?: string;
+}
+
+const projectsData: Project[] = [
+  {
+    title: "Eman Locksmith Portal",
+    originalName: "Kunci kak eman",
+    category: "UMKM & Jasa",
+    description: "Platform pemesanan jasa duplikat kunci dan panggilan darurat 24 jam dengan integrasi kontak langsung.",
+    link: "https://servis-kunci-eman.vercel.app/",
+    image: "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "SoleCare Shoe Repair",
+    originalName: "Jasa servis sol sepatu",
+    category: "UMKM & Jasa",
+    description: "Landing page premium penyedia layanan restorasi, pengecatan ulang, dan jahit sol sepatu.",
+    link: "https://poles-jahit.vercel.app/",
+    image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "Harapan Jaya Logistics",
+    originalName: "Harapan jaya",
+    category: "Company Profile",
+    description: "Website profile resmi perusahaan ekspedisi logistik dan distribusi kargo darat nusantara.",
+    link: "https://harapanjaya.web.id/",
+    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "TwinsDev Solutions",
+    originalName: "Web jual jasa",
+    category: "Company Profile",
+    description: "Portal agency digital TwinsDev untuk memasarkan jasa pembuatan website dan kustomisasi sistem.",
+    link: "https://twins-dev.vercel.app/",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "Cendekia Foundation Portal",
+    originalName: "Yayasan baznas",
+    category: "Pendidikan & Sosial",
+    description: "Platform informasi publik, donasi online, dan registrasi santri baru Pondok Pesantren Cendekia.",
+    link: "https://ponpes-cendekia.vercel.app/",
+    image: "https://images.unsplash.com/photo-1541829011-831c7b891152?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "BSO Vistara Corporate",
+    originalName: "Web profil Vistara",
+    category: "Company Profile",
+    description: "Landing page interaktif profil organisasi kemahasiswaan dan dokumentasi kegiatan Vistara.",
+    link: "https://bso-vistara.vercel.app/",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "Tyler Durden Apparel",
+    originalName: "E-commerce",
+    category: "E-Commerce",
+    description: "Web store e-commerce modern yang dilengkapi katalog pakaian, keranjang belanja, dan simulasi checkout.",
+    link: "https://tylerdurden.vercel.app/",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "Elsday Cafe QR Order",
+    originalName: "Booking meja makan/Sistem qr order",
+    category: "UMKM & Jasa",
+    description: "Aplikasi reservasi meja cafe dan menu digital interaktif dengan integrasi pemesanan QR code.",
+    link: "https://elsday-reservasi.vercel.app/",
+    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    title: "Posyandu Care Digital Portal",
+    originalName: "Web Posyandu",
+    category: "Kesehatan",
+    description: "Sistem pencatatan berkala kesehatan balita, imunisasi bulanan, dan visualisasi tumbuh kembang anak (Offline).",
+    screenshot: "/posyandu_dashboard.png",
+    image: "/posyandu_dashboard.png"
+  }
+];
 
 export default function Home() {
   const [selectedPackage, setSelectedPackage] = useState("");
@@ -9,6 +139,10 @@ export default function Home() {
   const [formWa, setFormWa] = useState("");
   const [formBudget, setFormBudget] = useState("Rp 750k - Rp 1.2jt");
   const [formDetails, setFormDetails] = useState("");
+
+  // Projects State
+  const [activeCategory, setActiveCategory] = useState("Semua");
+  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
 
   // Testimonials Slider State
   const [testiIndex, setTestiIndex] = useState(0);
@@ -200,26 +334,142 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
         </div>
       </section>
 
-      {/* --- FLOATING STATS (Validasi Data Proyek) --- */}
-      <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-12 -mt-16 md:-mt-24 mb-12">
-        <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-8 md:p-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div className="space-y-2 border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-8">
-            <div className="text-4xl md:text-5xl font-black text-navy">100+</div>
+      {/* --- STATS SECTION (Validasi Data Proyek) --- */}
+      <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-12 mt-12 mb-12">
+        <div className="bg-navy rounded-[2rem] shadow-xl border border-white/10 p-8 md:p-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-white">
+          <div className="space-y-2 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-8">
+            <div className="text-4xl md:text-5xl font-black text-accentYellow">
+              <AnimatedCounter target={100} suffix="+" />
+            </div>
             <div className="text-sm font-bold text-coral uppercase tracking-wider">Proyek Sukses</div>
-            <p className="text-xs text-gray-500 mt-1">Website & aplikasi digital yang telah kami rilis secara profesional.</p>
+            <p className="text-xs text-gray-300 mt-1">Website & aplikasi digital yang telah kami rilis secara profesional.</p>
           </div>
-          <div className="space-y-2 border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:px-8">
-            <div className="text-4xl md:text-5xl font-black text-navy">24/7</div>
+          <div className="space-y-2 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:px-8">
+            <div className="text-4xl md:text-5xl font-black text-accentYellow">
+              <AnimatedCounter target={24} suffix="/7" />
+            </div>
             <div className="text-sm font-bold text-coral uppercase tracking-wider">Bantuan</div>
-            <p className="text-xs text-gray-500 mt-1">Layanan konsultasi dan support teknis yang selalu siap sedia.</p>
+            <p className="text-xs text-gray-300 mt-1">Layanan konsultasi dan support teknis yang selalu siap sedia.</p>
           </div>
           <div className="space-y-2 md:pl-8">
-            <div className="text-4xl md:text-5xl font-black text-navy">5 Tahun</div>
+            <div className="text-4xl md:text-5xl font-black text-accentYellow">
+              <AnimatedCounter target={5} suffix=" Tahun" />
+            </div>
             <div className="text-sm font-bold text-coral uppercase tracking-wider">Pengalaman</div>
-            <p className="text-xs text-gray-500 mt-1">Keahlian industri dalam merancang website modern yang fungsional.</p>
+            <p className="text-xs text-gray-300 mt-1">Keahlian industri dalam merancang website modern yang fungsional.</p>
           </div>
         </div>
       </div>
+
+      {/* --- SECTION: WHAT WE PROMISE --- */}
+      <section className="py-20 bg-gray-50 border-t border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center space-y-4 mb-16">
+            <span className="text-xs font-bold uppercase tracking-widest text-coral block font-semibold">KEUNGGULAN KAMI</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-navy">What We Promise</h2>
+            <div className="w-16 h-1 bg-coral mx-auto rounded-full"></div>
+            <p className="text-gray-500 max-w-xl mx-auto text-sm">
+              Komitmen kami untuk memberikan standar kualitas tertinggi, dukungan berkelanjutan, dan transparansi di setiap proyek.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {[
+              {
+                title: "Mudah Dioperasikan",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                  </svg>
+                )
+              },
+              {
+                title: "Tutorial Penggunaan",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                )
+              },
+              {
+                title: "Support Penggunaan",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18.425 10.071c-.054-4.534-3.714-8.071-8.177-8.071s-8.123 3.537-8.177 8.071c-.054.454.268.859.717.859h1.365c.449 0 .813-.364.813-.813 0-2.977 2.422-5.4 5.4-5.4s5.4 2.423 5.4 5.4c0 .449.364.813.813.813h1.365c.449 0 .771-.405.717-.859zM2 14v3c0 1.1.9 2 2 2h2v-7H4c-1.1 0-2 .9-2 2zm16-2h-2v7h2c1.1 0 2-.9 2-2v-3c0-1.1-.9-2-2-2z" />
+                  </svg>
+                )
+              },
+              {
+                title: "Garansi Error & Bugs",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                )
+              },
+              {
+                title: "Free Maintenance",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                )
+              },
+              {
+                title: "Biaya Sekali Bayar",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )
+              },
+              {
+                title: "Update security",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                )
+              },
+              {
+                title: "SEO Optimized",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m0 0l-2-2m2 2l2-2" />
+                  </svg>
+                )
+              },
+              {
+                title: "Google analytics & FB Pixel",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                )
+              },
+              {
+                title: "Request Custom Fitur",
+                icon: (
+                  <svg className="w-8 h-8 text-accentYellow" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                )
+              }
+            ].map((promise, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300 min-h-[160px]"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-coral/5 flex items-center justify-center">
+                  {promise.icon}
+                </div>
+                <h3 className="text-sm font-bold text-navy leading-snug">{promise.title}</h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* --- SECTION: LAYANAN --- */}
       <section id="layanan" className="py-20 max-w-7xl mx-auto px-6 md:px-12">
@@ -230,22 +480,66 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
           <p className="text-gray-500 max-w-xl mx-auto text-sm">Kami fokus menghadirkan solusi digital yang clean, fungsional, dan siap membantu bisnis Anda berkembang.</p>
         </div>
 
-        {/* Card Layanan */}
+        {/* Card Layanan dengan Frame Gambar Setengah */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all bg-white group">
-            <div className="w-12 h-12 rounded-xl bg-navy/5 text-navy flex items-center justify-center font-bold text-xl group-hover:bg-coral group-hover:text-white transition-all mb-6">01</div>
-            <h3 className="text-xl font-bold mb-3 text-navy">Landing Page Bisnis</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">Website satu halaman premium yang didesain khusus untuk meningkatkan konversi penjualan produk atau jasa Anda.</p>
+          {/* Card 1 */}
+          <div className="border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all bg-white overflow-hidden group flex flex-col">
+            <div className="h-48 w-full overflow-hidden relative">
+              <img
+                src="https://images.unsplash.com/photo-1547658719-da2b81169d42?auto=format&fit=crop&w=600&q=80"
+                alt="Landing Page"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute top-4 left-4 bg-coral text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm">
+                01
+              </div>
+            </div>
+            <div className="p-8 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-navy">Landing Page Bisnis</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">Website satu halaman premium yang didesain khusus untuk meningkatkan konversi penjualan produk atau jasa Anda.</p>
+              </div>
+            </div>
           </div>
-          <div className="p-8 border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all bg-white group">
-            <div className="w-12 h-12 rounded-xl bg-navy/5 text-navy flex items-center justify-center font-bold text-xl group-hover:bg-coral group-hover:text-white transition-all mb-6">02</div>
-            <h3 className="text-xl font-bold mb-3 text-navy">Company Profile</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">Representasi digital profesional perusahaan Anda untuk membangun kepercayaan instan di hadapan klien dan partner bisnis.</p>
+
+          {/* Card 2 */}
+          <div className="border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all bg-white overflow-hidden group flex flex-col">
+            <div className="h-48 w-full overflow-hidden relative">
+              <img
+                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80"
+                alt="Company Profile"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute top-4 left-4 bg-coral text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm">
+                02
+              </div>
+            </div>
+            <div className="p-8 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-navy">Company Profile</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">Representasi digital profesional perusahaan Anda untuk membangun kepercayaan instan di hadapan klien dan partner bisnis.</p>
+              </div>
+            </div>
           </div>
-          <div className="p-8 border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all bg-white group">
-            <div className="w-12 h-12 rounded-xl bg-navy/5 text-navy flex items-center justify-center font-bold text-xl group-hover:bg-coral group-hover:text-white transition-all mb-6">03</div>
-            <h3 className="text-xl font-bold mb-3 text-navy">Custom Web Application</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">Solusi sistem informasi berbasis web yang disesuaikan sepenuhnya dengan kebutuhan alur kerja internal industri Anda.</p>
+
+          {/* Card 3 */}
+          <div className="border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all bg-white overflow-hidden group flex flex-col">
+            <div className="h-48 w-full overflow-hidden relative">
+              <img
+                src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80"
+                alt="Custom Web Application"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute top-4 left-4 bg-coral text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm">
+                03
+              </div>
+            </div>
+            <div className="p-8 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-navy">Custom Web Application</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">Solusi sistem informasi berbasis web yang disesuaikan sepenuhnya dengan kebutuhan alur kerja internal industri Anda.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -264,7 +558,14 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
             {/* Paket 1 */}
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+            <div 
+              onClick={() => handleSelectPackage("Paket Hemat (750 Ribu)")}
+              className={`bg-white rounded-[2rem] border-2 cursor-pointer p-8 flex flex-col justify-between transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 ${
+                selectedPackage === "Paket Hemat (750 Ribu)" 
+                  ? "border-coral shadow-xl scale-[1.02] z-10" 
+                  : "border-gray-200 hover:border-coral shadow-sm hover:shadow-md"
+              }`}
+            >
               <div>
                 <div className="space-y-2 mb-6">
                   <h3 className="text-lg font-bold text-navy">Paket Hemat (Landing Page)</h3>
@@ -296,7 +597,6 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
               </div>
 
               <button 
-                onClick={() => handleSelectPackage("Paket Hemat (750 Ribu)")}
                 className="w-full py-3.5 bg-navy hover:bg-coral text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md group-hover:shadow-navy/10"
               >
                 Pilih Paket Ini
@@ -304,7 +604,14 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
             </div>
 
             {/* Paket 2 (POPULER / HIGHLIGHTED) */}
-            <div className="bg-white rounded-[2rem] border-2 border-coral p-8 flex flex-col justify-between shadow-lg relative overflow-hidden transform lg:-translate-y-4 z-10">
+            <div 
+              onClick={() => handleSelectPackage("Paket Standard (1,2 Juta)")}
+              className={`bg-white rounded-[2rem] border-2 cursor-pointer p-8 flex flex-col justify-between transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 ${
+                selectedPackage === "Paket Standard (1,2 Juta)"
+                  ? "border-coral shadow-xl scale-[1.02] z-10"
+                  : "border-gray-200 hover:border-coral shadow-sm hover:shadow-md"
+              }`}
+            >
               <div className="absolute top-0 right-0 bg-coral text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-bl-xl">
                 Terpopuler
               </div>
@@ -343,7 +650,6 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
               </div>
 
               <button 
-                onClick={() => handleSelectPackage("Paket Standard (1,2 Juta)")}
                 className="w-full py-4 bg-coral hover:bg-coral-hover text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-coral/10 hover:shadow-coral/20"
               >
                 Pilih Paket Ini
@@ -351,7 +657,14 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
             </div>
 
             {/* Paket 3 */}
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+            <div 
+              onClick={() => handleSelectPackage("Paket Kustom (2,5 Juta)")}
+              className={`bg-white rounded-[2rem] border-2 cursor-pointer p-8 flex flex-col justify-between transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 ${
+                selectedPackage === "Paket Kustom (2,5 Juta)"
+                  ? "border-coral shadow-xl scale-[1.02] z-10"
+                  : "border-gray-200 hover:border-coral shadow-sm hover:shadow-md"
+              }`}
+            >
               <div>
                 <div className="space-y-2 mb-6">
                   <h3 className="text-lg font-bold text-navy">Paket Kustom (Custom Web System)</h3>
@@ -387,7 +700,6 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
               </div>
 
               <button 
-                onClick={() => handleSelectPackage("Paket Kustom (2,5 Juta)")}
                 className="w-full py-3.5 bg-navy hover:bg-coral text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md group-hover:shadow-navy/10"
               >
                 Pilih Paket Ini
@@ -400,32 +712,153 @@ Mohon segera hubungi saya kembali. Terima kasih!`;
       {/* --- SECTION: PROJEK / SHOWCASE --- */}
       <section id="projek" className="py-24 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
+          
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-widest text-coral">KARYA TERBARU</span>
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mt-1">PROJEK YANG SUDAH KAMI SELESAIKAN</h2>
             </div>
-            <p className="text-gray-400 max-w-md text-sm">Fokus kami adalah pada performa visual yang menawan serta fungsionalitas yang mulus untuk user pengguna.</p>
+            <p className="text-gray-400 max-w-md text-sm font-medium">Fokus kami adalah pada performa visual yang menawan serta fungsionalitas yang mulus untuk user pengguna.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="group cursor-pointer">
-              <div className="aspect-video w-full rounded-2xl bg-gray-800 overflow-hidden mb-4 relative">
-                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80" alt="Fitarena Application" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80" />
-              </div>
-              <h3 className="text-xl font-bold group-hover:text-coral transition-colors">Fitarena — Aplikasi Booking Lapangan Olahraga</h3>
-              <p className="text-gray-400 text-sm mt-1">Platform modern pemesanan venue olahraga secara realtime dan integrasi payment gateway.</p>
+          {/* Categories Tab Selector */}
+          <div className="flex flex-wrap justify-start gap-2.5 mb-10">
+            {["Semua", "Company Profile", "UMKM & Jasa", "E-Commerce", "Pendidikan & Sosial", "Kesehatan"].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                  activeCategory === cat
+                    ? "bg-coral text-white shadow-lg shadow-coral/25"
+                    : "bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5 cursor-pointer"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Projects Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {projectsData
+              .filter(p => activeCategory === "Semua" || p.category === activeCategory)
+              .map((proj, idx) => (
+                <div 
+                  key={idx} 
+                  className="group bg-white/5 border border-white/5 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-coral/30 hover:bg-white/[0.07] transition-all duration-300"
+                >
+                  <div>
+                    {/* Project Image */}
+                    <div className="aspect-video w-full overflow-hidden bg-gray-850 relative">
+                      <img 
+                        src={proj.image} 
+                        alt={proj.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                      />
+                      <div className="absolute top-4 left-4 bg-coral/90 backdrop-blur-sm text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-md shadow-sm">
+                        {proj.category}
+                      </div>
+                    </div>
+
+                    {/* Project Body */}
+                    <div className="p-6 space-y-3">
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-bold text-white group-hover:text-coral transition-colors">
+                          {proj.title}
+                        </h3>
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                          <span className="font-semibold text-coral/80">Original:</span>
+                          <span>{proj.originalName}</span>
+                        </div>
+                      </div>
+                      <p className="text-gray-400 text-xs leading-relaxed line-clamp-3">
+                        {proj.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Project Footer Button */}
+                  <div className="p-6 pt-0">
+                    {proj.screenshot ? (
+                      <button
+                        onClick={() => setSelectedScreenshot(proj.screenshot || null)}
+                        className="w-full py-3 bg-white/10 hover:bg-coral text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                      >
+                        <span>Lihat Screenshot</span>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                    ) : (
+                      <a
+                        href={proj.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3 bg-white/10 hover:bg-coral text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md"
+                      >
+                        <span>Akses Live Demo</span>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* --- MODAL FOR SCREENSHOT PREVIEW --- */}
+      {selectedScreenshot && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+          onClick={() => setSelectedScreenshot(null)}
+        >
+          <div 
+            className="relative max-w-4xl w-full bg-[#0b1836] rounded-3xl overflow-hidden border border-white/10 shadow-2xl p-6 md:p-8 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button 
+              onClick={() => setSelectedScreenshot(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-9 h-9 rounded-full flex items-center justify-center transition-all text-sm font-bold cursor-pointer"
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
+            
+            <div className="space-y-1 pr-8">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-coral/10 text-coral px-2.5 py-1 rounded-full">
+                Kesehatan (Offline Preview)
+              </span>
+              <h3 className="text-xl md:text-2xl font-black text-white mt-2">Posyandu Care Digital Portal</h3>
+              <p className="text-xs md:text-sm text-gray-300">
+                Sistem informasi pencatatan berkala kesehatan balita, imunisasi bulanan, dan visualisasi tumbuh kembang anak (Laravel/Offline).
+              </p>
             </div>
-            <div className="group cursor-pointer">
-              <div className="aspect-video w-full rounded-2xl bg-gray-800 overflow-hidden mb-4 relative">
-                <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80" alt="Posyandu Web Digital" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80" />
-              </div>
-              <h3 className="text-xl font-bold group-hover:text-coral transition-colors">Portal Layanan Posyandu Digital</h3>
-              <p className="text-gray-400 text-sm mt-1">Sistem informasi pencatatan tumbuh kembang anak terintegrasi untuk efisiensi administrasi desa.</p>
+            
+            <div className="aspect-[16/10] w-full rounded-2xl overflow-hidden bg-gray-950 border border-white/5 relative shadow-inner">
+              <img 
+                src={selectedScreenshot} 
+                alt="Posyandu Project Screenshot" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setSelectedScreenshot(null)}
+                className="px-6 py-2.5 bg-white/15 hover:bg-white/20 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Tutup Preview
+              </button>
             </div>
           </div>
         </div>
-      </section>
+      )}
 
       {/* --- SECTION: TESTIMONI (Auto & Manual Slide Carousel) --- */}
       <section id="testimoni" className="py-24 max-w-7xl mx-auto px-6 md:px-12">
